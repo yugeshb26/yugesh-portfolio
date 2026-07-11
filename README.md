@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Yugesh B — Portfolio
 
-## Getting Started
+Personal portfolio built with Next.js (App Router), TypeScript, Tailwind CSS v4, and Framer Motion.
 
-First, run the development server:
+## Status: MVP
+
+This is phase 1 of a scoped build — see "What's not here yet" below before assuming a section is missing by accident.
+
+## Stack
+
+- **Framework:** Next.js 16 (App Router, Turbopack)
+- **Styling:** Tailwind CSS v4, `next-themes` (light / dark / system)
+- **Animation:** Framer Motion (scroll reveals, typing effect, animated counters)
+- **Icons:** Lucide React + two hand-rolled SVGs for GitHub/LinkedIn (lucide dropped brand icons in this version)
+- **Content:** Fully data-driven — every section reads from `src/lib/data.ts`
+
+## Updating content
+
+Everything — experience, skills, projects, certifications, profile bio — lives in **`src/lib/data.ts`**. Edit that file and the whole site updates; no component changes needed.
+
+To swap the resume: replace `public/resume.pdf`.
+To swap a project's PDF overview: replace the matching file in `public/docs/`.
+
+## Local development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build   # production build
+npm run lint    # eslint
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deployment (Vercel)
 
-## Learn More
+1. Push this repo to GitHub.
+2. Import it at https://vercel.com/new.
+3. No environment variables are required for the current build.
+4. Deploy — Next.js App Router projects work out of the box on Vercel.
 
-To learn more about Next.js, take a look at the following resources:
+For Netlify or GitHub Pages, this needs `output: "export"` in `next.config.ts` if you want a fully static export (note: the contact form and theme toggle are client components and work fine with static export; nothing here requires a Node server).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## What's not here yet (by design)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Scoped out of this MVP pass, to keep quality high on what *is* built rather than shipping 40 shallow features:
 
-## Deploy on Vercel
+- Blog engine
+- Analytics (GA4 / Clarity) wiring
+- GitHub contribution heatmap
+- Command palette (Ctrl+K)
+- Three.js particle scenes (kept to a subtle CSS/Framer gradient background instead)
+- Real testimonials (placeholder "coming soon" cards are in `Testimonials` — replace with real quotes when available)
+- Certificate credential links/images (cards exist in `Certifications`, marked "coming soon")
+- A professional photo in the hero (currently an initials avatar)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Each of these can be layered on top of the current structure without a rewrite.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Known content gaps
+
+- `Thurro` role bullets are intentionally generic — the resume doesn't yet have specific achievements listed for this role (started Dec 2025). Update `src/lib/data.ts` once you have concrete wins to point to.
