@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl = "https://yugeshb.dev";
+const siteUrl = "https://yugesh.dev";
 const title = `${profile.name} — ${profile.role}`;
 const description = profile.tagline;
 
