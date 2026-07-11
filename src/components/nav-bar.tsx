@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/ui/logo";
 import { profile } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +38,8 @@ export function NavBar() {
       )}
     >
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <a href="#top" className="text-sm font-semibold tracking-tight text-black dark:text-white">
+        <a href="#top" className="flex items-center gap-2.5 text-sm font-semibold tracking-tight text-black dark:text-white">
+          <Logo className="h-8 w-8 rounded-[9px]" />
           {profile.name}
         </a>
 
