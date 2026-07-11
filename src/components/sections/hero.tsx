@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowDown, Mail } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "@/components/ui/brand-icons";
@@ -16,11 +17,6 @@ const roles = [
 ];
 
 export function Hero() {
-  const initials = profile.name
-    .split(" ")
-    .map((w) => w[0])
-    .join("");
-
   return (
     <section id="top" className="relative flex min-h-screen items-center overflow-hidden pt-16">
       {/* Animated gradient background */}
@@ -52,9 +48,18 @@ export function Hero() {
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
-            className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 text-2xl font-semibold text-white shadow-xl shadow-violet-500/20 sm:h-28 sm:w-28 sm:text-3xl"
+            className="mb-8 h-28 w-28 rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 p-[3px] shadow-xl shadow-violet-500/20 sm:h-32 sm:w-32"
           >
-            {initials}
+            <div className="h-full w-full overflow-hidden rounded-full ring-2 ring-white dark:ring-black">
+              <Image
+                src={profile.photo}
+                alt={profile.name}
+                width={256}
+                height={256}
+                priority
+                className="h-full w-full object-cover"
+              />
+            </div>
           </motion.div>
 
           <motion.p

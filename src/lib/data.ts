@@ -11,6 +11,7 @@ export const profile = {
   github: "https://github.com/yugeshb26",
   linkedin: "https://www.linkedin.com/in/yugesh-b-331279230",
   resumeFile: "/resume.pdf",
+  photo: "/photo.jpg",
   availability: "Open to new opportunities",
   yearsExperience: "4+",
   summary:
