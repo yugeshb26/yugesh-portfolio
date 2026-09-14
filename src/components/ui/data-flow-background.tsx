@@ -31,6 +31,7 @@ export function DataFlowBackground({ className }: { className?: string }) {
     }
 
     function resize() {
+      if (!ctx) return;
       const el = canvas as HTMLCanvasElement;
       const parent = el.parentElement;
       width = parent ? parent.clientWidth : window.innerWidth;
@@ -52,6 +53,7 @@ export function DataFlowBackground({ className }: { className?: string }) {
     }
 
     function step() {
+      if (!ctx) return;
       ctx.clearRect(0, 0, width, height);
       const dark = isDark();
       const dotColor = dark ? "rgba(167, 139, 250, 0.85)" : "rgba(124, 58, 237, 0.6)";
