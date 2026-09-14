@@ -7,6 +7,8 @@ import { GithubIcon, LinkedinIcon } from "@/components/ui/brand-icons";
 import { Button } from "@/components/ui/button";
 import { TypingText } from "@/components/ui/typing-text";
 import { AnimatedStat } from "@/components/ui/animated-stat";
+import { TiltCard } from "@/components/ui/tilt-card";
+import { DataFlowBackground } from "@/components/ui/data-flow-background";
 import { profile, stats } from "@/lib/data";
 
 const roles = [
@@ -40,6 +42,7 @@ export function Hero() {
             backgroundSize: "56px 56px",
           }}
         />
+        <DataFlowBackground className="absolute inset-0 opacity-70 dark:opacity-60" />
       </div>
 
       <div className="mx-auto w-full max-w-6xl px-6 py-20">
@@ -48,18 +51,22 @@ export function Hero() {
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
-            className="mb-8 h-28 w-28 rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 p-[3px] shadow-xl shadow-violet-500/20 sm:h-32 sm:w-32"
+            className="mb-8"
           >
-            <div className="h-full w-full overflow-hidden rounded-full ring-2 ring-white dark:ring-black">
-              <Image
-                src={profile.photo}
-                alt={profile.name}
-                width={256}
-                height={256}
-                priority
-                className="h-full w-full object-cover"
-              />
-            </div>
+            <TiltCard radiusClassName="rounded-full" maxTilt={14} className="h-28 w-28 sm:h-32 sm:w-32">
+              <div className="h-full w-full rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 p-[3px] shadow-xl shadow-violet-500/20">
+                <div className="h-full w-full overflow-hidden rounded-full ring-2 ring-white dark:ring-black">
+                  <Image
+                    src={profile.photo}
+                    alt={profile.name}
+                    width={256}
+                    height={256}
+                    priority
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              </div>
+            </TiltCard>
           </motion.div>
 
           <motion.p

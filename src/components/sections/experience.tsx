@@ -91,7 +91,16 @@ export function Experience() {
           description="Click a role to expand contributions and tech stack."
         />
 
-        <div className="relative space-y-6 before:absolute before:left-[7px] before:top-2 before:h-[calc(100%-1rem)] before:w-px before:bg-black/10 dark:before:bg-white/10">
+        <div className="relative space-y-6">
+          <motion.div
+            aria-hidden
+            initial={{ scaleY: 0 }}
+            whileInView={{ scaleY: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+            style={{ transformOrigin: "top" }}
+            className="absolute left-[7px] top-2 h-[calc(100%-1rem)] w-px bg-gradient-to-b from-violet-500 via-violet-400/60 to-transparent dark:from-violet-400"
+          />
           {experience.map((entry, i) => (
             <Reveal key={entry.company} delay={i * 0.08}>
               <ExperienceCard entry={entry} defaultOpen={i === 0} />

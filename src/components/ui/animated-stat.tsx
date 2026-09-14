@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView, animate } from "framer-motion";
 
-function AnimatedNumber({ value }: { value: string }) {
+export function AnimatedNumber({ value }: { value: string }) {
   const match = value.match(/^([~]?)([\d,.]+)(.*)$/);
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
@@ -20,7 +20,8 @@ function AnimatedNumber({ value }: { value: string }) {
       duration: 1.4,
       ease: [0.16, 1, 0.3, 1],
       onUpdate(v) {
-        setDisplay(`${prefix}${v.toFixed(decimals)}${suffix}`);
+        const formatted = decimals > 0 ? v.toFixed(decimals) : Math.round(v).toLocaleString("en-US");
+        setDisplay(`${prefix}${formatted}${suffix}`);
       },
     });
     return () => controls.stop();

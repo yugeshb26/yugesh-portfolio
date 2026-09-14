@@ -24,8 +24,8 @@ export const profile = {
 export const stats = [
   { value: "4+", label: "Years Experience" },
   { value: "3", label: "Companies" },
-  { value: "2", label: "Flagship Projects" },
-  { value: "20+", label: "Technologies" },
+  { value: "6", label: "Flagship Projects" },
+  { value: "30+", label: "Technologies" },
 ];
 
 export type ExperienceRole = {
@@ -54,12 +54,15 @@ export const experience: ExperienceEntry[] = [
         title: "Data Engineer",
         duration: "Dec 2025 — Present",
         bullets: [
-          "Building and maintaining data engineering pipelines and analytics infrastructure across internal reporting and data-store systems.",
-          "Working with database and reporting tooling spanning structured storage and analytical querying.",
+          "Designed and built a distributed job-execution platform (FastAPI + MySQL + APScheduler) that centrally schedules, dispatches, and tracks ~1,500 production web-scraping scripts across a multi-server AWS EC2 fleet, replacing a fragmented per-machine cron setup with zero code duplication.",
+          "Architected a broker-free, database-polling job queue using row-level locking (SELECT ... FOR UPDATE SKIP LOCKED) with automatic crash detection and retry-with-backoff, deployed end-to-end on AWS EC2 Windows servers as auto-restarting native services (NSSM).",
+          "Built and hardened a config-driven RAG ingestion pipeline processing 28+ financial/regulatory sources into a ClickHouse-backed vector corpus, including diagnosing a native heap-corruption crash and a cross-host n8n execution bug in production.",
+          "Reverse-engineered a captcha-gated government vehicle-registration portal into a 5–10x faster automated data pipeline, uncovering and fixing a data-classification bug responsible for ~1.7M misclassified vehicle registrations.",
+          "Built an LLM+VLM-powered extraction pipeline turning 40+ regulatory PDF disclosure forms across 30+ Indian insurance companies into structured financial data, using a two-pass text-then-vision verification flow.",
         ],
       },
     ],
-    techStack: ["Python", "SQL", "ETL", "Data Pipelines"],
+    techStack: ["Python", "FastAPI", "SQLAlchemy", "APScheduler", "MySQL", "ClickHouse", "AWS EC2", "Docker", "Playwright", "Ollama", "Google Gemini API"],
   },
   {
     company: "Tata Consultancy Services",
@@ -134,11 +137,12 @@ export type SkillCategory = {
 
 export const skills: SkillCategory[] = [
   { category: "Languages", skills: ["Python", "Perl", "SQL"] },
-  { category: "Web Scraping & Automation", skills: ["Selenium", "Playwright", "Scrapy", "BeautifulSoup", "urllib"] },
+  { category: "Backend & APIs", skills: ["FastAPI", "APScheduler", "REST APIs", "SQLAlchemy 2.0"] },
+  { category: "Web Scraping & Automation", skills: ["Selenium", "Playwright", "Scrapy", "BeautifulSoup", "requests", "urllib"] },
   { category: "Databases", skills: ["MySQL", "MongoDB", "SQLite", "ClickHouse"] },
-  { category: "AI / GenAI", skills: ["LLM Integration (Gemini, Ollama)", "RAG-style Grounding", "Vector Databases", "GenAI Virtual Assistants", "Prompt Engineering"] },
-  { category: "Data & Visualization", skills: ["Pandas", "NumPy", "Matplotlib", "Power BI", "ETL Pipelines"] },
-  { category: "Cloud & Tooling", skills: ["AWS S3", "Git", "GitLab", "Streamlit Cloud", "Render"] },
+  { category: "AI / GenAI", skills: ["LLM Integration (Gemini, Ollama)", "Vision-Language Models (VLM)", "RAG Pipelines", "VoyageAI Embeddings", "Vector Databases", "Prompt Engineering"] },
+  { category: "Data & Visualization", skills: ["Pandas", "NumPy", "Matplotlib", "Power BI", "ETL Pipelines", "PyMuPDF", "openpyxl"] },
+  { category: "Cloud & Tooling", skills: ["AWS S3", "AWS EC2", "Docker", "NSSM", "n8n", "Zyte", "Git", "GitLab", "Streamlit Cloud", "Render"] },
   { category: "Practices", skills: ["Agile", "Scrum"] },
 ];
 
@@ -227,5 +231,118 @@ export const projects: Project[] = [
     ],
     techStack: ["Python", "Selenium", "Playwright", "undetected-chromedriver", "MySQL", "ClickHouse", "AWS S3", "Ollama", "BeautifulSoup"],
     docFile: "/docs/gen-link-scheduler-overview.pdf",
+  },
+  {
+    slug: "distributed-scraper-execution-platform",
+    name: "Distributed Scraper Execution Platform",
+    tagline: "Broker-free, database-polling job orchestration platform coordinating ~1,500 production scraping scripts across a multi-server AWS EC2 fleet",
+    summary:
+      "Thurro ran roughly 1,500 Python scraping scripts (Selenium, Playwright, requests) across multiple Windows/Linux EC2 " +
+      "servers on ad-hoc, per-machine cron schedules — with no central visibility into what ran, what failed, or how to add " +
+      "capacity without copying scripts to every new box. Designed and built a control plane from an architecture document " +
+      "down to a live production deployment: a central code server all workers reach over a live SMB share (zero code " +
+      "duplication), a FastAPI control plane, a database-driven scheduler, and a pull-based worker fleet that claims work " +
+      "with row-level locking instead of a message broker.",
+    stats: [
+      { label: "Scripts Orchestrated", value: "~1,500" },
+      { label: "Core DB Tables", value: "4" },
+      { label: "Validated Live", value: "20 scripts" },
+      { label: "Code Duplication", value: "Zero" },
+    ],
+    contributions: [
+      "Broker-free distributed job queue in MySQL using row-level locking (SELECT ... FOR UPDATE SKIP LOCKED) so concurrent workers atomically claim eligible work with no message broker and no race conditions.",
+      "FastAPI control plane plus an APScheduler-based central scheduler reading cron/interval schedules from the database as the single source of truth for 'is this job due.'",
+      "Zero-code-duplication architecture — one central code server exposes all ~1,500 scripts over a live SMB network share (via Windows symbolic links, not junctions, since junctions don't support network paths); new worker capacity needs only a bare Python venv.",
+      "Full observability: every execution attempt is recorded with status, timing, and — on failure — the complete traceback plus a classified error type (dependency, timeout, network, HTTP 403/429, browser-automation).",
+      "Automatic crash recovery — a background sweep detects jobs stuck 'running' past 2x their expected timeout, marks them failed, and retries with exponential backoff, so a dead worker never silently loses a job.",
+      "Per-job concurrency policies (single-instance, max-parallel, capability-pool or server-pinned routing) enforced centrally so slow jobs can't pile up overlapping runs.",
+      "Diagnosed and fixed a real SQLAlchemy 1.x→2.0 breaking-change bug in shared production logging code used across the entire scraper codebase.",
+      "Validated against 20 real production scripts (Selenium/Playwright/requests) end-to-end, then deployed to live AWS EC2 Windows servers — Security Groups, Windows Firewall, SMB shares, and all three long-running processes (API, scheduler, worker) converted into auto-restarting native Windows Services (NSSM) so the platform survives a reboot unattended.",
+    ],
+    techStack: ["Python", "FastAPI", "SQLAlchemy 2.0", "APScheduler", "MySQL", "AWS EC2", "Windows Services (NSSM)", "Selenium", "Playwright"],
+  },
+  {
+    slug: "adqvest-document-chunking-embedding-pipeline",
+    name: "AdQvest Document Chunking & Embedding Pipeline",
+    tagline: "Config-driven RAG ingestion pipeline turning 28+ financial/regulatory sources into an embedded, searchable vector corpus",
+    summary:
+      "A production RAG ingestion pipeline that scrapes, extracts, classifies, chunks, embeds, and indexes financial and " +
+      "regulatory documents (NSE/BSE announcements, SEBI circulars, RBI bulletins, PIB releases, and more) from 28+ " +
+      "heterogeneous sources landing in S3. A single generic, YAML-configured engine handles all 28 source tables through " +
+      "declarative config rather than one bespoke script per source, writing embedded chunks into ClickHouse for downstream " +
+      "RAG applications to query.",
+    stats: [
+      { label: "Source Tables", value: "28+" },
+      { label: "Aggregate Collections", value: "7" },
+      { label: "ClickHouse Instances", value: "3" },
+      { label: "Embeddings", value: "VoyageAI" },
+    ],
+    contributions: [
+      "Config-driven core (table_registry.yaml) declaring every one of 28 source tables once — its S3 landing path, target ClickHouse table, field overrides, and schedule — so adding a new source is a config entry, not new code.",
+      "Generic chunking engine: downloads from S3, extracts text (pypdfium2 + PyMuPDF with scanned-page/OCR detection), classifies document type, chunks and embeds via VoyageAI, and writes to ClickHouse with safeguards so a partial failure never marks a truncated document 'done.'",
+      "Aggregation layer rolling up 28 per-source chunk tables into 7 shared collection tables that downstream retrieval actually queries against.",
+      "Diagnosed a silent production failure where 'chunked' rows never processed further — traced through the full trigger chain to a broken n8n integration executing commands on the n8n host instead of inside the application container, affecting every scheduled table.",
+      "Redesigned single-threaded, serialized chunking into a concurrent, per-table-parallel architecture (semaphore-bounded worker pools) so independently-scheduled tables never block each other, without double-processing any table.",
+      "Root-caused a native heap-corruption crash (malloc(): unaligned fastbin chunk detected) that the concurrency work exposed — pypdfium2/PyMuPDF aren't thread-safe — and landed on a subprocess-isolated, timeout-bounded extraction layer that survives both crashes and hangs.",
+      "Fixed a connection-leak-driven MySQL lock-timeout cascade by replacing a per-call engine with a process-wide singleton SQLAlchemy engine with automatic retry/backoff.",
+      "Hardened the error-logging path itself with connect timeouts, retry logic, and a local disk-spool fallback so failures are never silently lost even during downstream outages.",
+    ],
+    techStack: ["Python", "MySQL", "ClickHouse", "AWS S3", "Docker", "VoyageAI", "pypdfium2", "PyMuPDF", "n8n"],
+  },
+  {
+    slug: "vahan-vehicle-registration-data-pipeline",
+    name: "VAHAN Vehicle Registration Data Pipeline",
+    tagline: "Reverse-engineered a captcha-gated government portal into a 5–10x faster pipeline, uncovering a bug behind 1.7M misclassified vehicle registrations",
+    summary:
+      "VAHAN, India's government vehicle-registration analytics portal, has no official API, gates every query behind a " +
+      "captcha, and silently fails on queries that are too broad for its backend. Reverse-engineered the portal's real JSON " +
+      "endpoint and built a resilient, self-healing pipeline collecting Maker × Vehicle-Category × Fuel-Type × State × Month " +
+      "registration data at national scale — replacing a fragile browser-automation scraper, while independently " +
+      "discovering and fixing data-integrity bugs worth millions of misclassified vehicle registrations.",
+    stats: [
+      { label: "Report Configs", value: "20+" },
+      { label: "Misclassified Records Found", value: "~1.7M" },
+      { label: "Historical Backfill", value: "2013–2026" },
+      { label: "Speed vs. Browser Engine", value: "5–10x" },
+    ],
+    contributions: [
+      "Reverse-engineered the portal's undocumented JSON API (maker-report-page), identifying the exact request shape required and confirming the endpoint is captcha-exempt within a session's trust window — bypassing the need to click through the UI for every query.",
+      "Built two parallel scraping engines: a Playwright browser-automation engine as ground truth, and a pure-requests engine talking to the JSON API directly — 5–10x faster and verified via live A/B testing to mirror the browser engine exactly.",
+      "Automated captcha solving via local (Ollama) and cloud vision-language models, with magic-byte image validation and a 3-attempt retry loop so a single OCR misread doesn't silently drop a data combination.",
+      "Resilience layer: proxy fallback (Zyte) triggered only on genuine blocking codes (403/429/503, distinguished from real portal downtime), 3-way concurrent state scraping, per-combination failure tracking with automatic end-of-run retry, and per-state resumability after a killed run.",
+      "Solved the portal's pagination-collapse bug through systematic category/fuel-type query narrowing — looping ~13 vehicle categories individually plus a smart fuel-bucketing strategy that avoids 28 extra slow queries while guaranteeing complete coverage.",
+      "Found and fixed 3 serious data-integrity bugs through independent investigation: a varchar-truncation duplicate bug (1,100+ duplicate rows), a category-overlap double-counting issue, and a 'still-open month' date-labeling bug (corrected 25,000+ rows across 7 tables).",
+      "Discovered and fixed the 'Pure EV' misclassification bug — two distinct EV fuel-type filters were being treated as one, so an entire fast-growing segment was never collected anywhere. Quantified the impact at ~1.7M missing registrations over 8 months, proved the fix via exact month-by-month reconciliation, then backfilled the historical data.",
+      "Built a rigorous 4-way reconciliation framework (grand-total vs. category-only vs. fuel-only vs. combined breakdowns), cross-validated with live spot-checks against the portal's own Excel exports, and delivered findings as a published interactive data-visualization report.",
+      "Extended the pipeline with config-driven, per-category collection rules and backfilled 14 years of historical data (2013–2026) at national and state level, while keeping a parallel production codebase in sync throughout.",
+    ],
+    techStack: ["Python", "requests", "BeautifulSoup", "Playwright", "MySQL", "SQLAlchemy", "pandas", "Ollama", "Zyte", "concurrent.futures"],
+  },
+  {
+    slug: "irdai-insurance-disclosure-extraction-pipeline",
+    name: "IRDAI Insurance Disclosure Data Extraction Pipeline",
+    tagline: "Two-pass LLM+VLM extraction pipeline turning 40+ regulatory PDF forms across 30+ insurers into structured financial data",
+    summary:
+      "An end-to-end system that automates extraction of quarterly IRDAI 'NL' form disclosures (premium, claims, commission, " +
+      "operating expense, balance sheet, and channel-wise schedules) for 30+ Indian general and health insurers across " +
+      "FY24–FY26 — replacing a fully manual quarterly data-entry process with a pipeline feeding a ClickHouse analytics " +
+      "warehouse.",
+    stats: [
+      { label: "PDF Form Types", value: "40+" },
+      { label: "Insurers Covered", value: "30+" },
+      { label: "Fiscal Quarters", value: "10+" },
+      { label: "Extraction Passes", value: "Text + Vision" },
+    ],
+    contributions: [
+      "Pipeline: S3-sourced PDFs → PyMuPDF-based page/table classification (regex + keyword heuristics) → coordinate-based (bounding-box) table reconstruction → two-pass LLM+VLM extraction → cleaning/normalization → ClickHouse/MySQL storage → automated validation → Excel reporting.",
+      "Deterministic coordinate-based table parsing — for complex multi-segment tables (e.g. Fire/Marine/Motor/Health columns × quarter/YTD sub-columns), clusters raw word bounding boxes into rows/columns from geometry alone, before ever calling an LLM.",
+      "Two-pass multimodal extraction: an LLM text pass drafts values from parsed PDF text, then a VLM vision pass (Gemini / Ollama-hosted Gemma, page rendered as a 300–600 DPI image) visually cross-checks row/column alignment and figures against the source layout — catching misalignments pure text extraction misses.",
+      "Engineered a custom compact output format (TOON — Table-Oriented Output Notation) and parser to cut LLM/VLM token usage and simplify downstream parsing versus verbose JSON/CSV.",
+      "Data cleaning/normalization: accounting-style negative parsing, segment-name fuzzy matching, unit normalization (Lakhs/Crores/Ratio/%), and quarter/FY period mapping.",
+      "Idempotent, deduplicated ingestion — DB pre-checks skip already-collected pages/forms, with per-page dedup against existing (Company, Form, Period, Segment, Metric) keys before insert.",
+      "Concurrent processing of company×quarter jobs via a configurable ThreadPoolExecutor for throughput across hundreds of PDFs.",
+      "Automated accuracy validation — an offline checker cross-reconciles extracted subtotals (e.g. Total Marine = Marine Cargo + Marine Hull) to catch extraction errors before reporting.",
+    ],
+    techStack: ["Python", "PyMuPDF", "Google Gemini API", "Ollama", "ClickHouse", "MySQL", "AWS S3", "pandas", "openpyxl"],
   },
 ];
