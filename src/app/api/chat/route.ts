@@ -58,11 +58,22 @@ RULES:
 
 function parseKeys(raw: string | undefined): string[] {
   if (!raw) return [];
+  const trimmed = raw.trim();
+  if (!trimmed) return [];
   try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((k) => typeof k === "string" && k.length > 10) : [];
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((k): k is string => typeof k === "string" && k.length > 10);
+    }
+    // A single key pasted with surrounding quotes parses as a valid JSON string,
+    // not an array -- treat that as one key rather than silently discarding it.
+    if (typeof parsed === "string" && parsed.length > 10) {
+      return [parsed];
+    }
+    return [];
   } catch {
-    return raw.length > 10 ? [raw] : [];
+    // Not valid JSON at all -- the raw/unquoted key case.
+    return trimmed.length > 10 ? [trimmed] : [];
   }
 }
 
