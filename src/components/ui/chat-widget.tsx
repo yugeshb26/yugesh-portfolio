@@ -15,7 +15,7 @@ const STARTER_QUESTIONS = [
 
 const MAX_MESSAGES_PER_SESSION = 20;
 const firstName = profile.name.split(" ")[0];
-const BOT_NAME = "Vector";
+const BOT_NAME = "Nexora";
 // Terminal-style "user@hostname" handle combining name + profession, e.g. "yugesh@data-engineer"
 const botHandle = `${firstName.toLowerCase()}@${profile.role.toLowerCase().replace(/\s+/g, "-")}`;
 
