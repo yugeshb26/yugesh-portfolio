@@ -170,12 +170,10 @@ export const projects: Project[] = [
     name: "Indian Law AI Chatbot",
     tagline: "Streamlit-based legal Q&A assistant with semantic search, a self-refreshing case-law dataset, and multi-provider LLM failover",
     summary:
-      "A production Streamlit chatbot that answers questions on Indian law — the Bharatiya Nyaya Sanhita, Bharatiya " +
-      "Nagarik Suraksha Sanhita, Bharatiya Sakshya Adhiniyam, the Constitution of India, and case law from the Supreme " +
-      "Court and all 24 High Courts — grounded in a 40,000-entry curated Q&A dataset built by parsing raw legislative " +
-      "text and court judgments. Streams Gemini responses with automatic multi-key, multi-provider failover, retrieves " +
-      "grounding per-question via real vector search instead of a static context dump, renders LLM-generated charts " +
-      "inline, and keeps its dataset current via a fully automated daily GitHub Actions pipeline.",
+      "A production Streamlit chatbot answering questions on Indian law and case law from the Supreme Court and all " +
+      "24 High Courts, grounded in a 40,000-entry curated Q&A dataset. Streams Gemini responses with multi-key, " +
+      "multi-provider failover, retrieves grounding via real per-question vector search, and refreshes its dataset " +
+      "daily via GitHub Actions.",
     stats: [
       { label: "Q&A Dataset Entries", value: "40K" },
       { label: "Courts / Tribunals Tracked", value: "24+" },
@@ -183,18 +181,15 @@ export const projects: Project[] = [
       { label: "Lines of Python", value: "4K" },
     ],
     contributions: [
-      "Streaming chat engine with multi-key API failover — round-robin Gemini API key rotator with quota-aware failover, exponential backoff, and auto-continue logic that transparently resumes responses cut off by output-token limits.",
-      "Semantic search via Gemini embeddings — replaced a static ~35,000-token dataset dump that was being resent in full on every single message with per-question vector retrieval (cosine similarity over text-embedding-004 vectors, incrementally re-indexed daily), cutting per-message token usage by over 30,000 tokens while improving retrieval relevance for paraphrased questions.",
-      "TF-IDF-weighted fallback search — root-caused and fixed a real production bug where naive keyword counting buried genuinely relevant entries under thousands of false positives (a common token like the current year matched ~99% of entries); replaced with log-dampened term-frequency × inverse-document-frequency scoring over whole-word counts, verified against the exact failing query before/after.",
-      "Heuristic query router with a zero-LLM short-circuit — detects questions asking about a live case status or hearing date (a class of question no static dataset can ever answer reliably) and returns a deterministic, honest response pointing to official eCourts/High Court/Supreme Court portals, skipping the LLM call entirely — cheaper and safer than letting the model guess.",
-      "Multi-provider resilience — extracted a provider-agnostic key-rotator and added an automatic Groq fallback that activates only when every rotated Gemini key is simultaneously rate-limited or quota-exhausted, keeping the chatbot available through a full Gemini-side outage.",
-      "Self-refreshing legal dataset via GitHub Actions — a daily cron workflow pulls new Supreme Court, High Court, and tribunal judgments from Indian Kanoon's official RSS feeds and auto-commits new entries with no manual upkeep.",
-      "Offline regex-based Q&A extraction pipeline — parses raw statutory text directly into 20,000+ structured Q&A pairs with no LLM calls, plus a secondary LLM-assisted extraction path for judgment text.",
-      "Multi-source legal web scraping across three independent sources, each normalized into one unified Q&A schema.",
-      "LLM-driven data visualization — the model emits structured chart JSON (bar, pie, line, timeline) alongside prose, parsed and rendered as themed Plotly figures inline in the chat.",
-      "Persistent multi-conversation history via a SQLite-backed (WAL mode) chat/message store with auto-generated titles and regenerate/continue actions.",
-      "Custom dark-themed UI with a GSAP/Three.js/Anime.js animation layer and a hand-built SVG icon set.",
-      "Dual deployment targets — Streamlit Cloud and Render — with automatic environment-based API key sourcing.",
+      "Multi-key Gemini failover — round-robin key rotation with quota-aware fallback and auto-continue for cut-off responses.",
+      "Real semantic search — replaced a static 35K-token context dump with per-question vector retrieval, cutting tokens ~30K/message.",
+      "TF-IDF fallback search — fixed a bug where naive keyword counting buried relevant entries under thousands of false positives.",
+      "Zero-LLM case-status router — detects live-status questions and returns an honest, deterministic answer instead of a guess.",
+      "Multi-provider resilience — an automatic Groq fallback activates only during a full Gemini-side outage.",
+      "Self-refreshing dataset — a daily GitHub Actions pipeline pulls new judgments with no manual upkeep.",
+      "Offline Q&A extraction — 20,000+ structured pairs parsed from raw statutory text with zero LLM calls.",
+      "LLM-driven charts — the model emits chart JSON, rendered inline as themed Plotly figures.",
+      "Custom dark-themed UI — a GSAP/Three.js/Anime.js animation layer with a hand-built SVG icon set.",
     ],
     techStack: ["Python", "Streamlit", "Google Gemini API", "Groq", "NumPy", "SQLite", "Plotly", "GitHub Actions", "GSAP", "Three.js"],
     github: "https://github.com/yugeshb26/indian-law-chatbot",
@@ -211,14 +206,11 @@ export const projects: Project[] = [
   {
     slug: "automated-document-intelligence-pipeline",
     name: "Automated Document Intelligence Pipeline",
-    tagline: "Multi-engine web scraping, PDF extraction & RAG ingestion pipeline for financial/regulatory disclosure documents across India and the US",
+    tagline: "Multi-engine scraping, PDF extraction & RAG pipeline for regulatory documents across India and the US",
     summary:
-      "A production data-collection system that scrapes portfolio holdings, factsheets, insurer newsletters, and " +
-      "regulatory (RBI/SEBI) filings from 277 site-specific configurations spanning mutual funds, banks, insurers, and " +
-      "regulators — normalizing, deduplicating, and loading results into a dual-database (MySQL + ClickHouse) pipeline " +
-      "with automated S3 archival. Has since grown past scraping into a full document-to-vector RAG pipeline (hybrid " +
-      "PDF extraction, VoyageAI embeddings, Milvus vector search), active CAPTCHA defeat, and a direct SEC EDGAR " +
-      "ingestion path for US filings. Built and maintained end-to-end across ~40,500 lines of Python.",
+      "A production data-collection system scraping 277 financial/regulatory site configurations into a dual-database " +
+      "(MySQL + ClickHouse) pipeline with automated S3 archival. Grown past scraping into a document-to-vector RAG " +
+      "pipeline, active CAPTCHA defeat, and direct US (SEC EDGAR) filings ingestion. ~40,500 lines of Python.",
     stats: [
       { label: "Site Configs", value: "277" },
       { label: "Scraping Engines", value: "3" },
@@ -226,21 +218,16 @@ export const projects: Project[] = [
       { label: "Lines of Python", value: "~40.5K" },
     ],
     contributions: [
-      "Config-driven scraping framework processing 277 distinct site sources from a single unified codebase, eliminating per-site custom scripts via declarative YAML configuration.",
-      "Multi-engine fallback scraping chain (Selenium → Playwright → static HTTP) that escalates to heavier browser automation only when a lighter engine fails.",
-      "Dual-database persistence layer (MySQL + ClickHouse) with automated staging tables, cross-database sync, and a date-validation quarantine system for ambiguous or invalid dates.",
-      "Built a document-to-vector RAG pipeline on the scraped corpus — hybrid PDF extraction, VoyageAI embeddings, staged across 3 separate ClickHouse instances, and pushed into Milvus through a hand-rolled REST client (no pymilvus dependency) for semantic search over the full document archive.",
-      "2,389-line hybrid PDF-extraction engine (PyMuPDF + pypdfium2) with per-page scanned-vs-text classification, OCR split-digit repair, and table-structure reconstruction — converts already-downloaded PDFs into structured, chunkable text rather than just archiving them.",
-      "Vision-LLM CAPTCHA-solving cascade (local Ollama → cloud Ollama → manual fallback) that evaluates arithmetic CAPTCHAs rather than transcribing them, with magic-byte image validation — extends the anti-bot layer from passive fingerprint-masking to active CAPTCHA defeat.",
-      "Pure-stdlib REST control plane (http.server, zero FastAPI/Flask dependency) exposing trigger endpoints for link collection, single-config runs, chunking, and vector-push stages, driven externally by n8n.",
-      "Entity-resolution layer normalizing scraped company names against a monthly-refreshed BSE company-master table to attach NSE symbols to ingested filings.",
-      "Extended scope beyond India with a direct SEC EDGAR filings ingestion path — downloads source HTML directly instead of converting to PDF first, cutting per-filing fetch time roughly 10x.",
-      "LLM-based fallback date-resolution mechanism (via Ollama) as a last-resort recovery step before any record is quarantined.",
-      "2,548-line date/fiscal-quarter extraction engine handling Indian fiscal-year conventions and dozens of site-specific edge cases, backed by a 40+ case regression suite — now fronted by a 931-line per-link resolver that evaluates each link's own text/URL independently rather than inheriting a shared dropdown context.",
-      "Authentication abstraction layer supporting form-based login, SSO/redirect flows, and manual/OTP-gated sites.",
-      "Parallel execution runner using multiprocessing across all configs with per-source retry and resilience.",
-      "Anti-bot-detection handling (Selenium-stealth, undetected-chromedriver, CDP fingerprint masking) for Akamai/Cloudflare-style bot mitigation.",
-      "Automated S3 upload pipeline with rate limiting and retry handling for archiving collected documents at scale.",
+      "Config-driven scraping across 277 sources — one unified codebase, zero per-site custom scripts.",
+      "Multi-engine fallback chain — Selenium → Playwright → static HTTP, escalating only on failure.",
+      "Dual-database pipeline — MySQL + ClickHouse with automated staging and a date-validation quarantine system.",
+      "Document-to-vector RAG pipeline — hybrid PDF extraction, VoyageAI embeddings, and a hand-rolled Milvus client for semantic search.",
+      "Vision-LLM CAPTCHA defeat — a local → cloud Ollama cascade that solves CAPTCHAs instead of transcribing them.",
+      "Expanded to US filings — direct SEC EDGAR ingestion, cutting per-filing fetch time ~10x.",
+      "Entity resolution — matches scraped company names to NSE symbols via a BSE company-master table.",
+      "2,548-line fiscal-date engine — handles Indian fiscal-year conventions, backed by a 40+ case regression suite.",
+      "Anti-bot defense — Selenium-stealth, undetected-chromedriver, and CDP fingerprint masking.",
+      "Automated S3 archival — rate-limited, retry-safe uploads at scale.",
     ],
     techStack: ["Python", "Selenium", "Playwright", "undetected-chromedriver", "MySQL", "ClickHouse", "Milvus", "VoyageAI", "PyMuPDF", "pypdfium2", "n8n", "AWS S3", "Ollama", "BeautifulSoup"],
     docFile: "/docs/gen-link-scheduler-overview.pdf",
@@ -248,35 +235,29 @@ export const projects: Project[] = [
   {
     slug: "distributed-scraper-execution-platform",
     name: "Distributed Scraper Execution Platform",
-    tagline: "Broker-free job orchestration platform coordinating Thurro's ~1,500-script scraping fleet, now running 221 scripts live across a multi-server AWS EC2 deployment",
+    tagline: "Broker-free job orchestration platform for a ~1,500-script scraping fleet — 221 scripts live across a multi-server AWS EC2 deployment",
     summary:
-      "Thurro ran roughly 1,500 Python scraping scripts (Selenium, Playwright, requests) across multiple Windows/Linux EC2 " +
-      "servers on ad-hoc, per-machine cron schedules — with no central visibility into what ran, what failed, or how to add " +
-      "capacity without copying scripts to every new box. Designed and built a control plane from an architecture document " +
-      "down to a live production deployment: a central code server all workers reach over a live SMB share (zero code " +
-      "duplication), a FastAPI control plane, a database-driven scheduler, and a pull-based worker fleet that claims work " +
-      "with row-level locking instead of a message broker. Since the initial MVP, scaled onboarding from a 20-script " +
-      "validation batch to 221 scripts running live in production, and layered on a full operational tooling suite: " +
-      "live log streaming, remote job cancellation, static lint checks, guided failure diagnosis, and two-tier CI/CD.",
+      "A ~1,500-script scraping fleet ran on ad-hoc, per-machine cron schedules with no central visibility into what " +
+      "ran, what failed, or how to add capacity. Designed and built a control plane from an architecture document to " +
+      "a live deployment: a central code server, FastAPI control plane, and a pull-based worker fleet using row-level " +
+      "locking instead of a message broker. Scaled live usage from 20 to 221 scripts, with a full operational tooling " +
+      "suite layered on top: log streaming, remote cancellation, lint checks, failure diagnosis, and two-tier CI/CD.",
     stats: [
-      { label: "Scripts Orchestrated (target)", value: "~1,500" },
-      { label: "Scripts Live in Production", value: "221" },
+      { label: "Target Fleet Size", value: "~1,500" },
+      { label: "Scripts Live Now", value: "221" },
       { label: "CI Test Suite", value: "91 tests" },
       { label: "Code Duplication", value: "Zero" },
     ],
     contributions: [
-      "Broker-free distributed job queue in MySQL using row-level locking (SELECT ... FOR UPDATE SKIP LOCKED) so concurrent workers atomically claim eligible work with no message broker and no race conditions.",
-      "FastAPI control plane plus an APScheduler-based central scheduler reading cron/interval schedules from the database as the single source of truth for 'is this job due.'",
-      "Zero-code-duplication architecture — one central code server exposes all scripts over a live SMB network share (via Windows symbolic links, not junctions, since junctions don't support network paths); new worker capacity needs only a bare Python venv.",
-      "Built a live operational CLI suite (run_job.py, stop_job.py) to start a job by id, stream its stdout/stderr live via offset-based polling, and gracefully cancel any run on any server — a stop-watcher kills the script's full process tree via psutil within ~2s, with zero schema migration.",
-      "Live, untruncated log streaming — unbuffered stdout/stderr flushed to the run's log columns every 2s, replacing a prior output-length cap so full output stays viewable mid-run.",
-      "AST-based static lint tool (not regex) flagging patterns that have broken production jobs before — missing request timeouts, chained assignment, pandas methods removed across major versions, NaN-unsafe ClickHouse inserts — wired into CI as a non-blocking summary.",
-      "Guided failure-diagnosis tool surfacing a job's settings, run-duration percentiles, full traceback recovered even from scripts that swallow their own exceptions, the exact failing source lines, and a pattern-matched hint from 14 known root causes.",
-      "Two-tier CI/CD for ~220 production scripts: GitHub Actions compiles every file and runs a 91-test suite on every push/PR, then deploys to the Orchestrator via a polling watcher + systemd unit — refuses a script that doesn't compile or a dirty checkout.",
-      "Automatic crash recovery — a background sweep detects jobs stuck 'running' past 2x their expected timeout, marks them failed, and retries with exponential backoff, so a dead worker never silently loses a job.",
-      "Per-job concurrency policies (single-instance, max-parallel, capability-pool or server-pinned routing) enforced centrally so slow jobs can't pile up overlapping runs.",
-      "Diagnosed and fixed 5 real production incidents through this tooling, including a SQLAlchemy 1.x→2.0 breaking-change bug in shared logging code, a pandas-3 breaking change that silently broke every HS-code import script, and a regulator page-layout change.",
-      "Deployed to live AWS EC2 Windows servers — Security Groups, Windows Firewall, SMB shares, and all three long-running processes (API, scheduler, worker) converted into auto-restarting native Windows Services (NSSM) so the platform survives a reboot unattended.",
+      "Broker-free job queue — row-level locking (SELECT FOR UPDATE SKIP LOCKED), no message broker, no race conditions.",
+      "FastAPI + APScheduler control plane — the database is the single source of truth for job scheduling.",
+      "Zero code duplication — one SMB-shared code server; new capacity needs only a bare Python venv.",
+      "Live operational CLI — start, stream, and remotely cancel any job; kills the full process tree in ~2s.",
+      "Two-tier CI/CD — a 91-test suite plus auto-deploy, an AST-based lint tool, and guided failure diagnosis.",
+      "Automatic crash recovery — detects stuck jobs, retries with exponential backoff.",
+      "Per-job concurrency policies — single-instance, max-parallel, or server-pinned routing enforced centrally.",
+      "Scaled from 20 to 221 live scripts — fixed 5 real production incidents along the way.",
+      "Deployed to live AWS EC2 — auto-restarting Windows Services (NSSM), survives a reboot unattended.",
     ],
     techStack: ["Python", "FastAPI", "SQLAlchemy 2.0", "APScheduler", "MySQL", "AWS EC2", "Windows Services (NSSM)", "GitHub Actions", "pytest", "psutil", "Selenium", "Playwright"],
   },
