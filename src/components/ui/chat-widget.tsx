@@ -71,11 +71,19 @@ export function ChatWidget() {
           <motion.button
             onClick={() => setOpen(true)}
             initial={{ opacity: 0, x: 8 }}
-            animate={{ opacity: 1, x: 0 }}
+            animate={{ opacity: 1, x: 0, y: [0, -6, 0] }}
             exit={{ opacity: 0, x: 8 }}
-            transition={{ delay: 0.8, duration: 0.4 }}
-            className="fixed bottom-9 right-24 z-50 rounded-full border border-black/10 bg-white px-3 py-1.5 font-mono text-xs font-medium text-black/70 shadow-md transition-colors hover:text-violet-600 dark:border-white/10 dark:bg-[#0d0e14] dark:text-white/70 dark:hover:text-violet-400"
+            transition={{
+              opacity: { delay: 0.8, duration: 0.4 },
+              x: { delay: 0.8, duration: 0.4 },
+              y: { delay: 1.2, duration: 2.4, repeat: Infinity, ease: "easeInOut" },
+            }}
+            className="fixed bottom-9 right-24 z-50 flex items-center gap-1.5 rounded-full border border-violet-400/30 bg-white px-3 py-1.5 font-mono text-xs font-medium text-black/70 shadow-lg shadow-violet-500/20 transition-colors hover:text-violet-600 dark:border-violet-400/30 dark:bg-[#0d0e14] dark:text-white/70 dark:hover:text-violet-400"
           >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500" />
+            </span>
             {BOT_NAME}
           </motion.button>
         )}
