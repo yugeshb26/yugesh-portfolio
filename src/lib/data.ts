@@ -140,7 +140,7 @@ export const skills: SkillCategory[] = [
   { category: "Backend & APIs", skills: ["FastAPI", "APScheduler", "REST APIs", "SQLAlchemy 2.0"] },
   { category: "Web Scraping & Automation", skills: ["Selenium", "Playwright", "Scrapy", "BeautifulSoup", "requests", "urllib"] },
   { category: "Databases", skills: ["MySQL", "MongoDB", "SQLite", "ClickHouse"] },
-  { category: "AI / GenAI", skills: ["LLM Integration (Gemini, Ollama)", "Vision-Language Models (VLM)", "RAG Pipelines", "VoyageAI Embeddings", "Vector Databases", "Prompt Engineering"] },
+  { category: "AI / GenAI", skills: ["LLM Integration (Gemini, Ollama, Groq)", "Vision-Language Models (VLM)", "RAG Pipelines", "Semantic Search", "VoyageAI Embeddings", "Vector Databases", "Prompt Engineering"] },
   { category: "Data & Visualization", skills: ["Pandas", "NumPy", "Matplotlib", "Power BI", "ETL Pipelines", "PyMuPDF", "openpyxl"] },
   { category: "Cloud & Tooling", skills: ["AWS S3", "AWS EC2", "Docker", "NSSM", "n8n", "Zyte", "Git", "GitLab", "Streamlit Cloud", "Render"] },
   { category: "Practices", skills: ["Agile", "Scrum"] },
@@ -168,21 +168,26 @@ export const projects: Project[] = [
   {
     slug: "indian-law-chatbot",
     name: "Indian Law AI Chatbot",
-    tagline: "Streamlit-based legal Q&A assistant with a self-refreshing case-law dataset and multi-key LLM failover",
+    tagline: "Streamlit-based legal Q&A assistant with semantic search, a self-refreshing case-law dataset, and multi-provider LLM failover",
     summary:
       "A production Streamlit chatbot that answers questions on Indian law — the Bharatiya Nyaya Sanhita, Bharatiya " +
       "Nagarik Suraksha Sanhita, Bharatiya Sakshya Adhiniyam, the Constitution of India, and case law from the Supreme " +
-      "Court and all 24 High Courts — grounded in a 20,700+ entry curated Q&A dataset built by parsing raw legislative " +
-      "text and court judgments. Streams Gemini responses with automatic multi-key failover, renders LLM-generated " +
-      "charts inline, and keeps its dataset current via a fully automated daily GitHub Actions pipeline.",
+      "Court and all 24 High Courts — grounded in a 40,000-entry curated Q&A dataset built by parsing raw legislative " +
+      "text and court judgments. Streams Gemini responses with automatic multi-key, multi-provider failover, retrieves " +
+      "grounding per-question via real vector search instead of a static context dump, renders LLM-generated charts " +
+      "inline, and keeps its dataset current via a fully automated daily GitHub Actions pipeline.",
     stats: [
-      { label: "Q&A Dataset Entries", value: "20.7K" },
+      { label: "Q&A Dataset Entries", value: "40K" },
       { label: "Courts / Tribunals Tracked", value: "24+" },
-      { label: "Scraper Sources", value: "3" },
-      { label: "Lines of Python", value: "3.3K" },
+      { label: "Tokens Cut Per Message", value: "~35K" },
+      { label: "Lines of Python", value: "4K" },
     ],
     contributions: [
       "Streaming chat engine with multi-key API failover — round-robin Gemini API key rotator with quota-aware failover, exponential backoff, and auto-continue logic that transparently resumes responses cut off by output-token limits.",
+      "Semantic search via Gemini embeddings — replaced a static ~35,000-token dataset dump that was being resent in full on every single message with per-question vector retrieval (cosine similarity over text-embedding-004 vectors, incrementally re-indexed daily), cutting per-message token usage by over 30,000 tokens while improving retrieval relevance for paraphrased questions.",
+      "TF-IDF-weighted fallback search — root-caused and fixed a real production bug where naive keyword counting buried genuinely relevant entries under thousands of false positives (a common token like the current year matched ~99% of entries); replaced with log-dampened term-frequency × inverse-document-frequency scoring over whole-word counts, verified against the exact failing query before/after.",
+      "Heuristic query router with a zero-LLM short-circuit — detects questions asking about a live case status or hearing date (a class of question no static dataset can ever answer reliably) and returns a deterministic, honest response pointing to official eCourts/High Court/Supreme Court portals, skipping the LLM call entirely — cheaper and safer than letting the model guess.",
+      "Multi-provider resilience — extracted a provider-agnostic key-rotator and added an automatic Groq fallback that activates only when every rotated Gemini key is simultaneously rate-limited or quota-exhausted, keeping the chatbot available through a full Gemini-side outage.",
       "Self-refreshing legal dataset via GitHub Actions — a daily cron workflow pulls new Supreme Court, High Court, and tribunal judgments from Indian Kanoon's official RSS feeds and auto-commits new entries with no manual upkeep.",
       "Offline regex-based Q&A extraction pipeline — parses raw statutory text directly into 20,000+ structured Q&A pairs with no LLM calls, plus a secondary LLM-assisted extraction path for judgment text.",
       "Multi-source legal web scraping across three independent sources, each normalized into one unified Q&A schema.",
@@ -191,14 +196,14 @@ export const projects: Project[] = [
       "Custom dark-themed UI with a GSAP/Three.js/Anime.js animation layer and a hand-built SVG icon set.",
       "Dual deployment targets — Streamlit Cloud and Render — with automatic environment-based API key sourcing.",
     ],
-    techStack: ["Python", "Streamlit", "Google Gemini API", "SQLite", "Plotly", "GitHub Actions", "GSAP", "Three.js"],
+    techStack: ["Python", "Streamlit", "Google Gemini API", "Groq", "NumPy", "SQLite", "Plotly", "GitHub Actions", "GSAP", "Three.js"],
     github: "https://github.com/yugeshb26/indian-law-chatbot",
     docFile: "/docs/indian-law-chatbot-overview.pdf",
     githubStats: {
       stars: 0,
       forks: 0,
       languages: [
-        { name: "Python", bytes: 143117 },
+        { name: "Python", bytes: 172176 },
         { name: "CSS", bytes: 60628 },
       ],
     },
