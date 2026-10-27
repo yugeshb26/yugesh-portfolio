@@ -92,6 +92,18 @@ function collectKeys(baseName: string): string[] {
   return keys;
 }
 
+const PER_ATTEMPT_TIMEOUT_MS = 12_000;
+
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function tryGemini(keys: string[], systemPrompt: string, messages: ChatMessage[]): Promise<string | null> {
   const contents = messages.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
@@ -99,8 +111,9 @@ async function tryGemini(keys: string[], systemPrompt: string, messages: ChatMes
   }));
 
   for (const key of keys) {
+    const started = Date.now();
     try {
-      const res = await fetch(
+      const res = await fetchWithTimeout(
         `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`,
         {
           method: "POST",
@@ -110,19 +123,26 @@ async function tryGemini(keys: string[], systemPrompt: string, messages: ChatMes
             systemInstruction: { parts: [{ text: systemPrompt }] },
             generationConfig: { temperature: 0.5, maxOutputTokens: 400 },
           }),
-        }
+        },
+        PER_ATTEMPT_TIMEOUT_MS
       );
+      const ms = Date.now() - started;
       if (!res.ok) {
-        console.error(`[chat] Gemini key ...${key.slice(-4)} failed: ${res.status} ${await res.text()}`);
+        console.error(`[chat] Gemini key ...${key.slice(-4)} failed after ${ms}ms: ${res.status} ${await res.text()}`);
         continue;
       }
       const data = await res.json();
       const parts = data?.candidates?.[0]?.content?.parts as { text?: string }[] | undefined;
       const text = parts?.map((p) => p.text ?? "").join("");
-      if (text) return text.trim();
-      console.error(`[chat] Gemini key ...${key.slice(-4)} returned no text: ${JSON.stringify(data).slice(0, 500)}`);
+      if (text) {
+        console.error(`[chat] Gemini key ...${key.slice(-4)} succeeded in ${ms}ms`);
+        return text.trim();
+      }
+      console.error(`[chat] Gemini key ...${key.slice(-4)} returned no text after ${ms}ms: ${JSON.stringify(data).slice(0, 500)}`);
     } catch (err) {
-      console.error(`[chat] Gemini key ...${key.slice(-4)} threw:`, err);
+      const ms = Date.now() - started;
+      const aborted = err instanceof Error && err.name === "AbortError";
+      console.error(`[chat] Gemini key ...${key.slice(-4)} ${aborted ? "timed out" : "threw"} after ${ms}ms:`, err);
       continue;
     }
   }
@@ -133,30 +153,41 @@ async function tryGroq(keys: string[], systemPrompt: string, messages: ChatMessa
   const chatMessages = [{ role: "system", content: systemPrompt }, ...messages];
 
   for (const key of keys) {
+    const started = Date.now();
     try {
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${key}`,
+      const res = await fetchWithTimeout(
+        "https://api.groq.com/openai/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${key}`,
+          },
+          body: JSON.stringify({
+            model: GROQ_MODEL,
+            messages: chatMessages,
+            temperature: 0.5,
+            max_completion_tokens: 400,
+          }),
         },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          messages: chatMessages,
-          temperature: 0.5,
-          max_completion_tokens: 400,
-        }),
-      });
+        PER_ATTEMPT_TIMEOUT_MS
+      );
+      const ms = Date.now() - started;
       if (!res.ok) {
-        console.error(`[chat] Groq key ...${key.slice(-4)} failed: ${res.status} ${await res.text()}`);
+        console.error(`[chat] Groq key ...${key.slice(-4)} failed after ${ms}ms: ${res.status} ${await res.text()}`);
         continue;
       }
       const data = await res.json();
       const text = data?.choices?.[0]?.message?.content;
-      if (text) return String(text).trim();
-      console.error(`[chat] Groq key ...${key.slice(-4)} returned no text: ${JSON.stringify(data).slice(0, 500)}`);
+      if (text) {
+        console.error(`[chat] Groq key ...${key.slice(-4)} succeeded in ${ms}ms`);
+        return String(text).trim();
+      }
+      console.error(`[chat] Groq key ...${key.slice(-4)} returned no text after ${ms}ms: ${JSON.stringify(data).slice(0, 500)}`);
     } catch (err) {
-      console.error(`[chat] Groq key ...${key.slice(-4)} threw:`, err);
+      const ms = Date.now() - started;
+      const aborted = err instanceof Error && err.name === "AbortError";
+      console.error(`[chat] Groq key ...${key.slice(-4)} ${aborted ? "timed out" : "threw"} after ${ms}ms:`, err);
       continue;
     }
   }
