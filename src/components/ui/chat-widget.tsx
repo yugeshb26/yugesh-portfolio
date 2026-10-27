@@ -15,6 +15,7 @@ const STARTER_QUESTIONS = [
 
 const MAX_MESSAGES_PER_SESSION = 20;
 const firstName = profile.name.split(" ")[0];
+const BOT_NAME = "Vector";
 // Terminal-style "user@hostname" handle combining name + profession, e.g. "yugesh@data-engineer"
 const botHandle = `${firstName.toLowerCase()}@${profile.role.toLowerCase().replace(/\s+/g, "-")}`;
 
@@ -75,7 +76,7 @@ export function ChatWidget() {
             transition={{ delay: 0.8, duration: 0.4 }}
             className="fixed bottom-9 right-24 z-50 rounded-full border border-black/10 bg-white px-3 py-1.5 font-mono text-xs font-medium text-black/70 shadow-md transition-colors hover:text-violet-600 dark:border-white/10 dark:bg-[#0d0e14] dark:text-white/70 dark:hover:text-violet-400"
           >
-            yugesh.ai
+            {BOT_NAME}
           </motion.button>
         )}
       </AnimatePresence>
@@ -85,7 +86,7 @@ export function ChatWidget() {
         className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 text-white shadow-lg shadow-violet-500/30"
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.95 }}
-        aria-label={open ? "Close chat" : `${botHandle} — ask about ${firstName}`}
+        aria-label={open ? "Close chat" : `${BOT_NAME} — ask about ${firstName}`}
       >
         <AnimatePresence mode="wait" initial={false}>
           {open ? (
@@ -112,8 +113,8 @@ export function ChatWidget() {
             <div className="flex items-center gap-2 border-b border-black/10 bg-black/[0.02] px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
               <div>
-                <p className="font-mono text-sm font-semibold text-black dark:text-white">{botHandle}</p>
-                <p className="text-[11px] text-black/40 dark:text-white/40">Ask about {firstName}</p>
+                <p className="text-sm font-semibold text-black dark:text-white">{BOT_NAME}</p>
+                <p className="font-mono text-[11px] text-black/40 dark:text-white/40">{botHandle}</p>
               </div>
             </div>
 
@@ -121,7 +122,7 @@ export function ChatWidget() {
               {messages.length === 0 && (
                 <div className="space-y-3">
                   <p className="text-sm text-black/50 dark:text-white/50">
-                    Hi! Ask me anything about {profile.name}&apos;s background, skills, or projects.
+                    Hi, I&apos;m {BOT_NAME}. Ask me anything about {profile.name}&apos;s background, skills, or projects.
                   </p>
                   <div className="flex flex-col gap-2">
                     {STARTER_QUESTIONS.map((q) => (
