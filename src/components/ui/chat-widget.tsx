@@ -15,6 +15,8 @@ const STARTER_QUESTIONS = [
 
 const MAX_MESSAGES_PER_SESSION = 20;
 const firstName = profile.name.split(" ")[0];
+// Terminal-style "user@hostname" handle combining name + profession, e.g. "yugesh@data-engineer"
+const botHandle = `${firstName.toLowerCase()}@${profile.role.toLowerCase().replace(/\s+/g, "-")}`;
 
 export function ChatWidget() {
   const [open, setOpen] = useState(false);
@@ -68,7 +70,7 @@ export function ChatWidget() {
         className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 text-white shadow-lg shadow-violet-500/30"
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.95 }}
-        aria-label={open ? "Close chat" : `whoami — ask about ${firstName}`}
+        aria-label={open ? "Close chat" : `${botHandle} — ask about ${firstName}`}
       >
         <AnimatePresence mode="wait" initial={false}>
           {open ? (
@@ -95,7 +97,7 @@ export function ChatWidget() {
             <div className="flex items-center gap-2 border-b border-black/10 bg-black/[0.02] px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
               <div>
-                <p className="font-mono text-sm font-semibold text-black dark:text-white">whoami</p>
+                <p className="font-mono text-sm font-semibold text-black dark:text-white">{botHandle}</p>
                 <p className="text-[11px] text-black/40 dark:text-white/40">Ask about {firstName}</p>
               </div>
             </div>
