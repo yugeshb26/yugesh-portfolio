@@ -77,6 +77,21 @@ function parseKeys(raw: string | undefined): string[] {
   }
 }
 
+// Collects keys from multiple plain, separately-named env vars (no JSON/brackets
+// needed -- e.g. GEMINI_API_KEY and GEMINI_API_KEY_2, each holding one bare key),
+// plus the legacy combined GEMINI_API_KEYS (single value or JSON array), for
+// backwards compatibility. This is the simpler, less error-prone path: paste one
+// raw key per variable, nothing else.
+function collectKeys(baseName: string): string[] {
+  const keys: string[] = [];
+  keys.push(...parseKeys(process.env[`${baseName}S`])); // e.g. GEMINI_API_KEYS
+  for (const suffix of ["", "_2", "_3", "_4"]) {
+    const v = process.env[`${baseName}${suffix}`]?.trim();
+    if (v && v.length > 10 && !keys.includes(v)) keys.push(v);
+  }
+  return keys;
+}
+
 async function tryGemini(keys: string[], systemPrompt: string, messages: ChatMessage[]): Promise<string | null> {
   const contents = messages.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
@@ -168,17 +183,12 @@ export async function POST(req: NextRequest) {
   });
 
   const systemPrompt = buildSystemPrompt();
-  const rawGemini = process.env.GEMINI_API_KEYS;
-  const rawGroq = process.env.GROQ_API_KEYS;
-  const geminiKeys = parseKeys(rawGemini);
-  const groqKeys = parseKeys(rawGroq);
-  console.error(
-    `[chat] raw env lengths -- GEMINI_API_KEYS: ${rawGemini?.length ?? "undefined"}, GROQ_API_KEYS: ${rawGroq?.length ?? "undefined"}`
-  );
+  const geminiKeys = collectKeys("GEMINI_API_KEY");
+  const groqKeys = collectKeys("GROQ_API_KEY");
   console.error(
     `[chat] env var names containing GEMINI or GROQ: ${Object.keys(process.env).filter((k) => /GEMINI|GROQ/i.test(k)).join(", ") || "(none found)"}`
   );
-  console.error(`[chat] parsed ${geminiKeys.length} Gemini key(s), ${groqKeys.length} Groq key(s) from env`);
+  console.error(`[chat] collected ${geminiKeys.length} Gemini key(s), ${groqKeys.length} Groq key(s) from env`);
 
   let reply: string | null = null;
   if (geminiKeys.length > 0) {
