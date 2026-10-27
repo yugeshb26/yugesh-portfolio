@@ -106,7 +106,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
                   const [lead, ...rest] = c.split(" — ");
                   return (
                     <li key={i} className="text-sm leading-relaxed text-black/70 dark:text-white/70">
-                      <span className="font-semibold text-black dark:text-white">{lead}</span>
+                      <span className="font-semibold text-violet-600 dark:text-violet-400">{lead}</span>
                       {rest.length > 0 && <span> — {rest.join(" — ")}</span>}
                     </li>
                   );
