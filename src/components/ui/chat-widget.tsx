@@ -65,6 +65,21 @@ export function ChatWidget() {
 
   return (
     <>
+      <AnimatePresence>
+        {!open && (
+          <motion.button
+            onClick={() => setOpen(true)}
+            initial={{ opacity: 0, x: 8 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 8 }}
+            transition={{ delay: 0.8, duration: 0.4 }}
+            className="fixed bottom-9 right-24 z-50 rounded-full border border-black/10 bg-white px-3 py-1.5 font-mono text-xs font-medium text-black/70 shadow-md transition-colors hover:text-violet-600 dark:border-white/10 dark:bg-[#0d0e14] dark:text-white/70 dark:hover:text-violet-400"
+          >
+            yugesh.ai
+          </motion.button>
+        )}
+      </AnimatePresence>
+
       <motion.button
         onClick={() => setOpen((v) => !v)}
         className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 text-white shadow-lg shadow-violet-500/30"
