@@ -1,13 +1,7 @@
-import { GraduationCap, MapPin, Briefcase } from "lucide-react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Reveal } from "@/components/ui/reveal";
+import { TerminalWindow, TerminalLine, TerminalCursor } from "@/components/ui/terminal-window";
 import { profile, education } from "@/lib/data";
-
-const facts = [
-  { icon: Briefcase, label: "Current Role", value: `${profile.role} @ Thurro` },
-  { icon: MapPin, label: "Location", value: profile.location },
-  { icon: GraduationCap, label: "Education", value: education.degree },
-];
 
 export function About() {
   return (
@@ -27,21 +21,32 @@ export function About() {
           </Reveal>
 
           <Reveal delay={0.1} className="md:col-span-2">
-            <div className="flex flex-col gap-4 rounded-2xl border border-black/10 bg-black/[0.02] p-6 dark:border-white/10 dark:bg-white/[0.03]">
-              {facts.map((f) => (
-                <div key={f.label} className="flex items-start gap-3">
-                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400">
-                    <f.icon className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-black/40 dark:text-white/40">
-                      {f.label}
-                    </p>
-                    <p className="text-sm font-medium text-black dark:text-white">{f.value}</p>
-                  </div>
+            <TerminalWindow title="yugesh@portfolio: ~">
+              <TerminalLine>whoami</TerminalLine>
+              <div className="mt-3 space-y-1.5 text-white/70">
+                <div>
+                  <span className="inline-block w-20 text-white/40">role</span>
+                  {profile.role} @ Thurro
                 </div>
-              ))}
-            </div>
+                <div>
+                  <span className="inline-block w-20 text-white/40">location</span>
+                  {profile.location}
+                </div>
+                <div>
+                  <span className="inline-block w-20 text-white/40">degree</span>
+                  {education.degree}
+                </div>
+                <div>
+                  <span className="inline-block w-20 text-white/40">status</span>
+                  <span className="text-emerald-400">●</span> {profile.availability}
+                </div>
+              </div>
+              <div className="mt-4">
+                <TerminalLine>
+                  <TerminalCursor />
+                </TerminalLine>
+              </div>
+            </TerminalWindow>
           </Reveal>
         </div>
       </div>

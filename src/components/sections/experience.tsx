@@ -101,6 +101,13 @@ export function Experience() {
             style={{ transformOrigin: "top" }}
             className="absolute left-[7px] top-2 h-[calc(100%-1rem)] w-px bg-gradient-to-b from-violet-500 via-violet-400/60 to-transparent dark:from-violet-400"
           />
+          {/* Data-pulse: a glowing dot that loops down the timeline, like a record flowing through a pipeline */}
+          <motion.div
+            aria-hidden
+            className="absolute left-2 z-10 h-2 w-2 -translate-x-1/2 rounded-full bg-cyan-400 shadow-[0_0_10px_3px_rgba(34,211,238,0.7)]"
+            animate={{ top: ["2%", "96%"], opacity: [0, 1, 1, 0] }}
+            transition={{ duration: 3.5, repeat: Infinity, repeatDelay: 1.2, ease: "linear" }}
+          />
           {experience.map((entry, i) => (
             <Reveal key={entry.company} delay={i * 0.08}>
               <ExperienceCard entry={entry} defaultOpen={i === 0} />
