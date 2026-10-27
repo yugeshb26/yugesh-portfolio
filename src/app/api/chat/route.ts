@@ -86,12 +86,17 @@ async function tryGemini(keys: string[], systemPrompt: string, messages: ChatMes
           }),
         }
       );
-      if (!res.ok) continue;
+      if (!res.ok) {
+        console.error(`[chat] Gemini key ...${key.slice(-4)} failed: ${res.status} ${await res.text()}`);
+        continue;
+      }
       const data = await res.json();
       const parts = data?.candidates?.[0]?.content?.parts as { text?: string }[] | undefined;
       const text = parts?.map((p) => p.text ?? "").join("");
       if (text) return text.trim();
-    } catch {
+      console.error(`[chat] Gemini key ...${key.slice(-4)} returned no text: ${JSON.stringify(data).slice(0, 500)}`);
+    } catch (err) {
+      console.error(`[chat] Gemini key ...${key.slice(-4)} threw:`, err);
       continue;
     }
   }
@@ -116,11 +121,16 @@ async function tryGroq(keys: string[], systemPrompt: string, messages: ChatMessa
           max_completion_tokens: 400,
         }),
       });
-      if (!res.ok) continue;
+      if (!res.ok) {
+        console.error(`[chat] Groq key ...${key.slice(-4)} failed: ${res.status} ${await res.text()}`);
+        continue;
+      }
       const data = await res.json();
       const text = data?.choices?.[0]?.message?.content;
       if (text) return String(text).trim();
-    } catch {
+      console.error(`[chat] Groq key ...${key.slice(-4)} returned no text: ${JSON.stringify(data).slice(0, 500)}`);
+    } catch (err) {
+      console.error(`[chat] Groq key ...${key.slice(-4)} threw:`, err);
       continue;
     }
   }
@@ -149,6 +159,7 @@ export async function POST(req: NextRequest) {
   const systemPrompt = buildSystemPrompt();
   const geminiKeys = parseKeys(process.env.GEMINI_API_KEYS);
   const groqKeys = parseKeys(process.env.GROQ_API_KEYS);
+  console.error(`[chat] parsed ${geminiKeys.length} Gemini key(s), ${groqKeys.length} Groq key(s) from env`);
 
   let reply: string | null = null;
   if (geminiKeys.length > 0) {

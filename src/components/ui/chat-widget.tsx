@@ -68,7 +68,7 @@ export function ChatWidget() {
         className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 text-white shadow-lg shadow-violet-500/30"
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.95 }}
-        aria-label={open ? "Close chat" : `Ask about ${firstName}`}
+        aria-label={open ? "Close chat" : `whoami — ask about ${firstName}`}
       >
         <AnimatePresence mode="wait" initial={false}>
           {open ? (
@@ -94,7 +94,10 @@ export function ChatWidget() {
           >
             <div className="flex items-center gap-2 border-b border-black/10 bg-black/[0.02] px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <p className="text-sm font-semibold text-black dark:text-white">Ask about {firstName}</p>
+              <div>
+                <p className="font-mono text-sm font-semibold text-black dark:text-white">whoami</p>
+                <p className="text-[11px] text-black/40 dark:text-white/40">Ask about {firstName}</p>
+              </div>
             </div>
 
             <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
