@@ -168,8 +168,16 @@ export async function POST(req: NextRequest) {
   });
 
   const systemPrompt = buildSystemPrompt();
-  const geminiKeys = parseKeys(process.env.GEMINI_API_KEYS);
-  const groqKeys = parseKeys(process.env.GROQ_API_KEYS);
+  const rawGemini = process.env.GEMINI_API_KEYS;
+  const rawGroq = process.env.GROQ_API_KEYS;
+  const geminiKeys = parseKeys(rawGemini);
+  const groqKeys = parseKeys(rawGroq);
+  console.error(
+    `[chat] raw env lengths -- GEMINI_API_KEYS: ${rawGemini?.length ?? "undefined"}, GROQ_API_KEYS: ${rawGroq?.length ?? "undefined"}`
+  );
+  console.error(
+    `[chat] env var names containing GEMINI or GROQ: ${Object.keys(process.env).filter((k) => /GEMINI|GROQ/i.test(k)).join(", ") || "(none found)"}`
+  );
   console.error(`[chat] parsed ${geminiKeys.length} Gemini key(s), ${groqKeys.length} Groq key(s) from env`);
 
   let reply: string | null = null;
