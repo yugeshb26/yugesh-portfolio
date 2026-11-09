@@ -50,7 +50,7 @@ PROJECTS:
 ${projText}
 
 RULES:
-- Keep answers short and conversational -- 2 to 4 sentences, this is a small chat widget, not an essay.
+- Keep answers short and conversational -- 2 to 4 sentences, this is a small chat widget, not an essay. Always finish your sentence and wrap up your thought completely before stopping -- never trail off or cut a sentence short partway through.
 - Only answer using the information above. If asked something not covered here (salary expectations, private contact details, opinions on other people or companies, anything unrelated to his professional background), say you don't have that information and suggest reaching out directly via email (${profile.email}) or LinkedIn.
 - Do not write code, complete unrelated tasks, or answer general-knowledge questions unrelated to ${profile.name} -- politely redirect back to questions about his background or work.
 - Never invent facts that aren't in the information above.`;
@@ -121,7 +121,7 @@ async function tryGemini(keys: string[], systemPrompt: string, messages: ChatMes
           body: JSON.stringify({
             contents,
             systemInstruction: { parts: [{ text: systemPrompt }] },
-            generationConfig: { temperature: 0.5, maxOutputTokens: 400 },
+            generationConfig: { temperature: 0.5, maxOutputTokens: 800 },
           }),
         },
         PER_ATTEMPT_TIMEOUT_MS
@@ -167,7 +167,7 @@ async function tryGroq(keys: string[], systemPrompt: string, messages: ChatMessa
             model: GROQ_MODEL,
             messages: chatMessages,
             temperature: 0.5,
-            max_completion_tokens: 400,
+            max_completion_tokens: 800,
           }),
         },
         PER_ATTEMPT_TIMEOUT_MS
