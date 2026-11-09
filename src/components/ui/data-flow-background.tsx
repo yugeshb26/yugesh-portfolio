@@ -25,6 +25,7 @@ export function DataFlowBackground({ className }: { className?: string }) {
     let dpr = 1;
     let nodes: Node[] = [];
     let raf = 0;
+    let visible = true;
 
     function isDark() {
       return document.documentElement.classList.contains("dark");
@@ -93,7 +94,7 @@ export function DataFlowBackground({ className }: { className?: string }) {
         ctx.fill();
       }
 
-      raf = requestAnimationFrame(step);
+      if (visible) raf = requestAnimationFrame(step);
     }
 
     resize();
@@ -106,9 +107,26 @@ export function DataFlowBackground({ className }: { className?: string }) {
     const ro = new ResizeObserver(() => resize());
     if (canvas.parentElement) ro.observe(canvas.parentElement);
 
+    // Pause the rAF loop while the hero is scrolled out of view, so the
+    // animation doesn't keep costing main-thread time on the rest of the page.
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry?.isIntersecting ?? true;
+        if (visible && !raf && !reduceMotion) {
+          raf = requestAnimationFrame(step);
+        } else if (!visible && raf) {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        }
+      },
+      { threshold: 0 }
+    );
+    if (canvas.parentElement) io.observe(canvas.parentElement);
+
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      io.disconnect();
     };
   }, []);
 

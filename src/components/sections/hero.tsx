@@ -48,8 +48,8 @@ export function Hero() {
       <div className="mx-auto w-full max-w-6xl px-6 py-20">
         <div className="flex flex-col items-center text-center">
           <motion.div
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ scale: 0.85 }}
+            animate={{ scale: 1 }}
             transition={{ duration: 0.6 }}
             className="mb-8"
           >
@@ -80,8 +80,8 @@ export function Hero() {
           </motion.p>
 
           <motion.h1
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 14 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.6, delay: 0.15 }}
             className="text-5xl font-semibold tracking-tight text-black sm:text-7xl dark:text-white"
           >
