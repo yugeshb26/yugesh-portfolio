@@ -93,6 +93,9 @@ function collectKeys(baseName: string): string[] {
 }
 
 const PER_ATTEMPT_TIMEOUT_MS = 12_000;
+const MAX_CONTINUATIONS = 2;
+const CONTINUE_PROMPT =
+  "Continue your response exactly where you left off. Do not repeat anything you already said, and do not restart the sentence.";
 
 async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response> {
   const controller = new AbortController();
@@ -104,91 +107,137 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: nu
   }
 }
 
+// Heuristic: does this text read as a finished thought, or does it look cut off
+// mid-sentence (e.g. hit the output-token cap)? Mirrors the same check used for
+// the Law Bot's auto-continue logic.
+function seemsComplete(text: string): boolean {
+  const trimmed = text.trimEnd();
+  if (!trimmed) return false;
+  if (text.endsWith("\n")) return true;
+  const lastChar = trimmed[trimmed.length - 1];
+  if (".!?:;)\"]}*`~".includes(lastChar)) return true;
+  const lastLine = trimmed.split("\n").pop() ?? "";
+  if (lastLine.length > 200 && /[a-zA-Z]/.test(lastChar)) return false;
+  return true;
+}
+
 async function tryGemini(keys: string[], systemPrompt: string, messages: ChatMessage[]): Promise<string | null> {
-  const contents = messages.map((m) => ({
+  const baseContents = messages.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
     parts: [{ text: m.content }],
   }));
 
-  for (const key of keys) {
+  keyLoop: for (const key of keys) {
+    const contents = [...baseContents];
+    let fullText = "";
+    let continuations = 0;
     const started = Date.now();
-    try {
-      const res = await fetchWithTimeout(
-        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents,
-            systemInstruction: { parts: [{ text: systemPrompt }] },
-            generationConfig: { temperature: 0.5, maxOutputTokens: 800 },
-          }),
-        },
-        PER_ATTEMPT_TIMEOUT_MS
-      );
-      const ms = Date.now() - started;
-      if (!res.ok) {
-        console.error(`[chat] Gemini key ...${key.slice(-4)} failed after ${ms}ms: ${res.status} ${await res.text()}`);
-        continue;
+
+    while (true) {
+      try {
+        const res = await fetchWithTimeout(
+          `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents,
+              systemInstruction: { parts: [{ text: systemPrompt }] },
+              generationConfig: { temperature: 0.5, maxOutputTokens: 800 },
+            }),
+          },
+          PER_ATTEMPT_TIMEOUT_MS
+        );
+        const ms = Date.now() - started;
+        if (!res.ok) {
+          console.error(`[chat] Gemini key ...${key.slice(-4)} failed after ${ms}ms: ${res.status} ${await res.text()}`);
+          continue keyLoop;
+        }
+        const data = await res.json();
+        const parts = data?.candidates?.[0]?.content?.parts as { text?: string }[] | undefined;
+        const text = parts?.map((p) => p.text ?? "").join("") ?? "";
+        if (!text) {
+          console.error(`[chat] Gemini key ...${key.slice(-4)} returned no text after ${ms}ms: ${JSON.stringify(data).slice(0, 500)}`);
+          continue keyLoop;
+        }
+        fullText += text;
+
+        if (seemsComplete(fullText) || continuations >= MAX_CONTINUATIONS) {
+          console.error(`[chat] Gemini key ...${key.slice(-4)} succeeded in ${ms}ms (${continuations} continuation(s))`);
+          return fullText.trim();
+        }
+
+        console.error(`[chat] Gemini key ...${key.slice(-4)} looked cut off after ${ms}ms, auto-continuing`);
+        contents.push({ role: "model", parts: [{ text }] });
+        contents.push({ role: "user", parts: [{ text: CONTINUE_PROMPT }] });
+        continuations++;
+      } catch (err) {
+        const ms = Date.now() - started;
+        const aborted = err instanceof Error && err.name === "AbortError";
+        console.error(`[chat] Gemini key ...${key.slice(-4)} ${aborted ? "timed out" : "threw"} after ${ms}ms:`, err);
+        continue keyLoop;
       }
-      const data = await res.json();
-      const parts = data?.candidates?.[0]?.content?.parts as { text?: string }[] | undefined;
-      const text = parts?.map((p) => p.text ?? "").join("");
-      if (text) {
-        console.error(`[chat] Gemini key ...${key.slice(-4)} succeeded in ${ms}ms`);
-        return text.trim();
-      }
-      console.error(`[chat] Gemini key ...${key.slice(-4)} returned no text after ${ms}ms: ${JSON.stringify(data).slice(0, 500)}`);
-    } catch (err) {
-      const ms = Date.now() - started;
-      const aborted = err instanceof Error && err.name === "AbortError";
-      console.error(`[chat] Gemini key ...${key.slice(-4)} ${aborted ? "timed out" : "threw"} after ${ms}ms:`, err);
-      continue;
     }
   }
   return null;
 }
 
 async function tryGroq(keys: string[], systemPrompt: string, messages: ChatMessage[]): Promise<string | null> {
-  const chatMessages = [{ role: "system", content: systemPrompt }, ...messages];
+  const baseMessages = [{ role: "system", content: systemPrompt }, ...messages];
 
-  for (const key of keys) {
+  keyLoop: for (const key of keys) {
+    const chatMessages: { role: string; content: string }[] = [...baseMessages];
+    let fullText = "";
+    let continuations = 0;
     const started = Date.now();
-    try {
-      const res = await fetchWithTimeout(
-        "https://api.groq.com/openai/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${key}`,
+
+    while (true) {
+      try {
+        const res = await fetchWithTimeout(
+          "https://api.groq.com/openai/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${key}`,
+            },
+            body: JSON.stringify({
+              model: GROQ_MODEL,
+              messages: chatMessages,
+              temperature: 0.5,
+              max_completion_tokens: 800,
+            }),
           },
-          body: JSON.stringify({
-            model: GROQ_MODEL,
-            messages: chatMessages,
-            temperature: 0.5,
-            max_completion_tokens: 800,
-          }),
-        },
-        PER_ATTEMPT_TIMEOUT_MS
-      );
-      const ms = Date.now() - started;
-      if (!res.ok) {
-        console.error(`[chat] Groq key ...${key.slice(-4)} failed after ${ms}ms: ${res.status} ${await res.text()}`);
-        continue;
+          PER_ATTEMPT_TIMEOUT_MS
+        );
+        const ms = Date.now() - started;
+        if (!res.ok) {
+          console.error(`[chat] Groq key ...${key.slice(-4)} failed after ${ms}ms: ${res.status} ${await res.text()}`);
+          continue keyLoop;
+        }
+        const data = await res.json();
+        const text = String(data?.choices?.[0]?.message?.content ?? "");
+        if (!text) {
+          console.error(`[chat] Groq key ...${key.slice(-4)} returned no text after ${ms}ms: ${JSON.stringify(data).slice(0, 500)}`);
+          continue keyLoop;
+        }
+        fullText += text;
+
+        if (seemsComplete(fullText) || continuations >= MAX_CONTINUATIONS) {
+          console.error(`[chat] Groq key ...${key.slice(-4)} succeeded in ${ms}ms (${continuations} continuation(s))`);
+          return fullText.trim();
+        }
+
+        console.error(`[chat] Groq key ...${key.slice(-4)} looked cut off after ${ms}ms, auto-continuing`);
+        chatMessages.push({ role: "assistant", content: text });
+        chatMessages.push({ role: "user", content: CONTINUE_PROMPT });
+        continuations++;
+      } catch (err) {
+        const ms = Date.now() - started;
+        const aborted = err instanceof Error && err.name === "AbortError";
+        console.error(`[chat] Groq key ...${key.slice(-4)} ${aborted ? "timed out" : "threw"} after ${ms}ms:`, err);
+        continue keyLoop;
       }
-      const data = await res.json();
-      const text = data?.choices?.[0]?.message?.content;
-      if (text) {
-        console.error(`[chat] Groq key ...${key.slice(-4)} succeeded in ${ms}ms`);
-        return String(text).trim();
-      }
-      console.error(`[chat] Groq key ...${key.slice(-4)} returned no text after ${ms}ms: ${JSON.stringify(data).slice(0, 500)}`);
-    } catch (err) {
-      const ms = Date.now() - started;
-      const aborted = err instanceof Error && err.name === "AbortError";
-      console.error(`[chat] Groq key ...${key.slice(-4)} ${aborted ? "timed out" : "threw"} after ${ms}ms:`, err);
-      continue;
     }
   }
   return null;
