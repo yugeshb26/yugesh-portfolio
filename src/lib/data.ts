@@ -193,6 +193,7 @@ export const projects: Project[] = [
     ],
     techStack: ["Python", "Streamlit", "Google Gemini API", "Groq", "NumPy", "SQLite", "Plotly", "GitHub Actions", "GSAP", "Three.js"],
     github: "https://github.com/yugeshb26/indian-law-chatbot",
+    demo: "https://indian-law-chatbot.streamlit.app/",
     docFile: "/docs/indian-law-chatbot-overview.pdf",
     githubStats: {
       stars: 0,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, ChevronDown } from "lucide-react";
+import { FileText, ChevronDown, ExternalLink } from "lucide-react";
 import { GithubIcon } from "@/components/ui/brand-icons";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Badge } from "@/components/ui/badge";
@@ -132,6 +132,11 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
 
             {/* Links */}
             <div className="mt-7 flex flex-wrap gap-3">
+              {project.demo && (
+                <Button href={project.demo} target="_blank" rel="noreferrer" size="sm">
+                  <ExternalLink className="h-4 w-4" /> Try it live
+                </Button>
+              )}
               {project.github && (
                 <Button href={project.github} target="_blank" rel="noreferrer" size="sm" variant="secondary">
                   <GithubIcon className="h-4 w-4" /> View Code
